@@ -44,8 +44,6 @@ class GameState():
                         self.getKnightMoves(r,c,moves)
                     elif piece=="B":
                         self.getBishopMoves(r,c,moves)
-        for m in  moves:
-            print(m.getChessNotation(self))
         return moves
                         
     def getPawnMoves(self,r,c,moves):
@@ -60,6 +58,18 @@ class GameState():
             if c+1<=7:
                 if self.board[r-1][c+1][0]== "b":
                     moves.append(Move((r,c),(r-1,c+1),self))
+        if  not self.white_to_move:
+            if self.board[r+1][c] =="--":
+                moves.append(Move((r,c),(r+1,c),self))
+                if self.board[r+2][c]=="--" and r == 1:
+                    moves.append(Move((r,c),(r+2,c),self))
+            if c-1 >= 0:
+                if self.board[r+1][c-1][0]== "w":
+                    moves.append(Move((r,c),(r+1,c-1),self))
+            if c+1<=7:
+                if self.board[r+1][c+1][0]== "w":
+                    moves.append(Move((r,c),(r+1,c+1),self))
+            
                     
                     
     def getKnightMoves(self,r,c,moves):
