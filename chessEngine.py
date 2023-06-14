@@ -4,7 +4,7 @@ class GameState():
                      ["bp","bp","bp","bp","bp","bp","bp","bp"],
                      ["--","--","--","--","--","--","--","--"],
                      ["--","--","--","--","--","--","--","--"],
-                     ["--","--","--","wB","--","--","--","--"],
+                     ["--","--","--","--","--","--","--","--"],
                      ["--","--","--","--","--","--","--","--"],
                      ["wp","wp","wp","wp","wp","wp","wp","wp"],
                      ["wR","wN","wB","wQ","wK","wB","wN","wR"],]
@@ -44,6 +44,8 @@ class GameState():
                         self.getKnightMoves(r,c,moves)
                     elif piece=="B":
                         self.getBishopMoves(r,c,moves)
+        for move in moves:
+            print (move.getChessNotation(self))
         return moves
                         
     def getPawnMoves(self,r,c,moves):   
@@ -99,12 +101,12 @@ class GameState():
                 if self.board[r+1][c+2]=="--"or self.board[r+1][c+2][0]!=self.board[r][c][0]:
                     moves.append(Move((r,c),(r+1,c+2),self))
     def getBishopMoves(self,r,c,moves):
-        directons =[(-1,-1),(1,-1),(1,1),(1,-1)]
+        directons =[(-1,-1),(-1,1),(1,-1),(1,1)]
         enemyColor = "b" if self.white_to_move else "w"
         for d in directons:
             for i in range(1,8):
-                endRow = r = d[0] *i
-                endCol =c = d[1] *i
+                endRow = r + d[0] *i
+                endCol = c + d[1] *i
                 if 0 <= endRow <8 and 0<= endCol<8:
                     endPiece = self.board[endRow][endCol]
                     if endPiece=="--":
@@ -117,15 +119,15 @@ class GameState():
                 else:
                     break
     def getKingMoves(self,r,c,moves):
-        adjSquares =[(r,c+1),(r+1,c+1),(r+1,c),(r+1,c-1),(r-1,c-1),(r-1,c+1),(r-1,c),(r,c-1)]
-        enemyColor = "b" if self.white_to_move else "w"
-        for square in adjSquares:
-            if self.board[square[0]][square[1]]=="--":
-                moves.append(Move((r,c),square,self))
-            elif self.board[square[0]][square[1]][0]==enemyColor:
-                moves.append(Move((r,c),square,self))
-            else:
-                continue
+        adjSquares =[(-1,-1),(-1,0),(-1 ,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)]
+        allyColor = "w" if self.white_to_move else "b"
+        for i in range(8):
+            endRow= r+ adjSquares[i][0]
+            endCol= c + adjSquares[i][1]
+            if 0<=endRow<8 and 0<=endCol<8:
+                endPiece=self.board[endRow][endCol]
+                if endPiece[0]!=allyColor:
+                    moves.append(Move((r,c),(endRow,endCol),self))
     def getQueenMoves(self,r,c,moves):
         self.getBishopMoves(r,c,moves)
         self.getRookMoves(r,c,moves)
@@ -134,8 +136,8 @@ class GameState():
         enemyColor = "b" if self.white_to_move else "w"
         for d in directons:
             for i in range(1,8):
-                endRow = r = d[0] *i
-                endCol =c = d[1] *i
+                endRow = r + d[0] *i
+                endCol = c + d[1] *i
                 if 0 <= endRow <8 and 0<= endCol<8:
                     endPiece = self.board[endRow][endCol]
                     if endPiece=="--":

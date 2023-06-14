@@ -48,8 +48,10 @@ def main():
                         print(move.getChessNotation(gs))
                         gs.make_move(move)
                         moveMade = True
-                    sqSelected= ()
-                    playerClicks= []
+                        sqSelected= ()
+                        playerClicks= []
+                    else:
+                        playerClicks= [sqSelected]
                     
         if moveMade:
             validMoves=gs.getLegalMoves()
