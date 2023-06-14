@@ -10,21 +10,33 @@ class GameState():
                      ["wR","wN","wB","wQ","wK","wB","wN","wR"],]
         self.white_to_move= True
         self.move_log = []
-        
+        self.whiteKingLocation=(7,4)
+        self.blackkingLocation=(0,4)
+        self.inCheck = False
+        self.pins = []
+        self.checks = []
+        self.checkMate=False
+        self.staleMate=False             
     def make_move(self,move):
+        if move.movedPiece== "wK":
+            self.whiteKingLocation= (move.endRow, move.endColumn)
+        if move.movedPiece== "bK":
+            self.blackKingLocation= (move.endRow, move.endColumn) 
         self.board[move.startRow][move.startColumn] = "--"
         self.board[move.endRow][move.endColumn] = move.movedPiece
         self.move_log.append(move)
         self.white_to_move = not self.white_to_move
-        
     def undo_move(self):
         if len(self.move_log)==0:
             return
-        self.board[self.move_log[-1].endRow][self.move_log[-1].endColumn] = self.move_log[-1].capturedPiece
-        self.board[self.move_log[-1].startRow][self.move_log[-1].startColumn] = self.move_log[-1].movedPiece
-        self.move_log.pop()
+        move=self.move_log.pop()
+        if move.movedPiece== "wK":
+            self.whiteKingLocation= (move.startRow, move.startColumn)
+        if move.movedPiece== "bK":
+            self.blackKingLocation= (move.startRow, move.startColumn)        
+        self.board[move.endRow][move.endColumn] = move.capturedPiece
+        self.board[move.startRow][move.startColumn] = move.movedPiece
         self.white_to_move = not self.white_to_move
-        
     def getPossibleMoves(self):
         moves=[]
         for r in range(len(self.board)):
@@ -44,13 +56,12 @@ class GameState():
                         self.getKnightMoves(r,c,moves)
                     elif piece=="B":
                         self.getBishopMoves(r,c,moves)
-        return moves
-                        
+        return moves                   
     def getPawnMoves(self,r,c,moves):   
         if self.white_to_move:
             if self.board[r-1][c] =="--":
                 moves.append(Move((r,c),(r-1,c),self))
-                if self.board[r-2][c]=="--" and r ==6:
+                if r ==6 and self.board[r-2][c]=="--":
                     moves.append(Move((r,c),(r-2,c),self))
             if c-1 >= 0:
                 if self.board[r-1][c-1][0]== "b":
@@ -61,7 +72,7 @@ class GameState():
         if  not self.white_to_move:
             if self.board[r+1][c] =="--":
                 moves.append(Move((r,c),(r+1,c),self))
-                if self.board[r+2][c]=="--" and r == 1:
+                if  r == 1 and self.board[r+2][c]=="--":
                     moves.append(Move((r,c),(r+2,c),self))
             if c-1 >= 0:
                 if self.board[r+1][c-1][0]== "w":
@@ -147,11 +158,69 @@ class GameState():
                         break
                 else:
                     break
+    def inCheck(self):
+        if self.white_to_move:
+            return self.squareAttacked(self.whiteKingLocation[0],self.whiteKingLocation[1])
+        else:
+            return self.squareAttacked(self.blackkingLocation[0],self.blackkingLocation[1])
     def getLegalMoves(self):
-        return self.getPossibleMoves()
-        
-        
-        
+        moves=self.getPossibleMoves()
+        for i in range(len(moves)-1,-1,-1):
+            self.make_move(moves[i])
+            self.white_to_move= not self.white_to_move
+            if self.inCheck():
+                moves.pop(i)
+            self.white_to_move= not self.white_to_move
+            self.undo_move() 
+        if len(moves) == 0:
+            if self.inCheck():
+                self.checkMate=True
+            else:
+                self.staleMate=True
+        else:
+            self.checkMate=False
+            self.staleMate=False
+            
+        return moves
+    def checkforChecksAndPins():
+        inCheck = False
+        pins = []
+        checks = []
+        if self.white_to_move:
+            enemyColor="b"
+            allyColor="w"
+            startRow=self.whiteKingLocation[0]
+            startCol=self.whiteKingLocation[1]
+        else:
+            enemyColor="w"
+            allyColor="b"
+            startRow=self.blackKingLocation[0]
+            startCol=self.blackKingLocation[1]
+        directions=((-1,0),(0,-1),(1,0),(0,1),(-1,-1),(-1,1),(1,-1),(1,1))
+        for j in range(len(directions)):
+            d=directions[j]
+            possiblePin=()
+            for i in range(1,8):
+                endRow= startRow+d[0]*i
+                endCol= startCol+d[1] *i
+                if 0<=endRow <8 and 0<=endCol<8:
+                    endPiece=self.board[endRow][endCol]
+                    if endPiece[0] ==allyColor:
+                        if possiblePin==():
+                            possiblePin=(endRow,endCol,d[0],d[1])
+                        else:
+                            break
+                    elif endPiece[0] == enemyColor:
+                        type =endPiece[1]
+                        if (0<=j<3 and type== R) or (0<=j<=7
+    def squareAttacked(self,r,c):
+        self.white_to_move= not self.white_to_move
+        oppMoves=self.getPossibleMoves()
+        self.white_to_move= not self.white_to_move
+        for move in oppMoves:
+            if move.endRow==r and move.endColumn==c:
+                return True
+        return False
 class Move():
     #NOTE - fu**ing maps from
     rankToRow={"1":7,"2":6,"3":5,"4":4,"5":3,"6":2,"7":1,"8":0}
