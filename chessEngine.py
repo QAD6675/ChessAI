@@ -5,7 +5,7 @@ class GameState():
                      ["--","--","--","--","--","--","--","--"],
                      ["--","--","--","--","--","--","--","--"],
                      ["--","--","--","--","--","--","--","--"],
-                     ["--","--","--","--","bp","--","--","--"],
+                     ["--","--","--","--","--","--","--","--"],
                      ["wp","wp","wp","wp","wp","wp","wp","wp"],
                      ["wR","wN","wB","wQ","wK","wB","wN","wR"],]
         self.white_to_move= True
@@ -46,7 +46,7 @@ class GameState():
                         self.getBishopMoves(r,c,moves)
         return moves
                         
-    def getPawnMoves(self,r,c,moves):
+    def getPawnMoves(self,r,c,moves):   
         if self.white_to_move:
             if self.board[r-1][c] =="--":
                 moves.append(Move((r,c),(r-1,c),self))
@@ -69,11 +69,36 @@ class GameState():
             if c+1<=7:
                 if self.board[r+1][c+1][0]== "w":
                     moves.append(Move((r,c),(r+1,c+1),self))
-            
-                    
                     
     def getKnightMoves(self,r,c,moves):
-        pass
+        if r-2>=0:
+            if c-1>=0:
+                if self.board[r-2][c-1]=="--"or self.board[r-2][c-1][0]!=self.board[r][c][0]:
+                    moves.append(Move((r,c),(r-2,c-1),self))
+            if c+1<=7:
+                if self.board[r-2][c+1]=="--"or self.board[r-2][c+1][0]!=self.board[r][c][0]:
+                    moves.append(Move((r,c),(r-2,c+1),self))
+        if r-1>=0:
+            if c-2>=0:
+                if self.board[r-1][c-2]=="--"or self.board[r-1][c-2][0]!=self.board[r][c][0]:
+                    moves.append(Move((r,c),(r-1,c-2),self))
+            if c+2<=7:
+                if self.board[r-1][c+2]=="--"or self.board[r-1][c+2][0]!=self.board[r][c][0]:
+                    moves.append(Move((r,c),(r-1,c+2),self))
+        if r+2<=7:
+            if c-1>=0:
+                if self.board[r+2][c-1]=="--"or self.board[r+2][c-1][0]!=self.board[r][c][0]:
+                    moves.append(Move((r,c),(r+2,c-1),self))
+            if c+1<=7:
+                if self.board[r+2][c+1]=="--"or self.board[r+2][c+1][0]!=self.board[r][c][0]:
+                    moves.append(Move((r,c),(r+2,c+1),self))
+        if r+1<=7:
+            if c-2>=0:
+                if self.board[r+1][c-2]=="--"or self.board[r+1][c-2][0]!=self.board[r][c][0]:
+                    moves.append(Move((r,c),(r+1,c-2),self))
+            if c+2<=7:
+                if self.board[r+1][c+2]=="--"or self.board[r+1][c+2][0]!=self.board[r][c][0]:
+                    moves.append(Move((r,c),(r+1,c+2),self))
     def getBishopMoves(self,r,c,moves):
         pass
     def getKingMoves(self,r,c,moves):
