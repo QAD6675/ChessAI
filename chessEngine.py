@@ -4,7 +4,7 @@ class GameState():
                      ["bp","bp","bp","bp","bp","bp","bp","bp"],
                      ["--","--","--","--","--","--","--","--"],
                      ["--","--","--","--","--","--","--","--"],
-                     ["--","--","--","--","--","--","--","--"],
+                     ["--","--","--","wB","--","--","--","--"],
                      ["--","--","--","--","--","--","--","--"],
                      ["wp","wp","wp","wp","wp","wp","wp","wp"],
                      ["wR","wN","wB","wQ","wK","wB","wN","wR"],]
@@ -68,8 +68,7 @@ class GameState():
                     moves.append(Move((r,c),(r+1,c-1),self))
             if c+1<=7:
                 if self.board[r+1][c+1][0]== "w":
-                    moves.append(Move((r,c),(r+1,c+1),self))
-                    
+                    moves.append(Move((r,c),(r+1,c+1),self))                   
     def getKnightMoves(self,r,c,moves):
         if r-2>=0:
             if c-1>=0:
@@ -100,14 +99,54 @@ class GameState():
                 if self.board[r+1][c+2]=="--"or self.board[r+1][c+2][0]!=self.board[r][c][0]:
                     moves.append(Move((r,c),(r+1,c+2),self))
     def getBishopMoves(self,r,c,moves):
-        pass
+        directons =[(-1,-1),(1,-1),(1,1),(1,-1)]
+        enemyColor = "b" if self.white_to_move else "w"
+        for d in directons:
+            for i in range(1,8):
+                endRow = r = d[0] *i
+                endCol =c = d[1] *i
+                if 0 <= endRow <8 and 0<= endCol<8:
+                    endPiece = self.board[endRow][endCol]
+                    if endPiece=="--":
+                        moves.append(Move((r,c),(endRow,endCol),self))
+                    elif endPiece[0]==enemyColor:
+                        moves.append(Move((r,c),(endRow,endCol),self))
+                        break
+                    else:
+                        break
+                else:
+                    break
     def getKingMoves(self,r,c,moves):
-        pass
+        adjSquares =[(r,c+1),(r+1,c+1),(r+1,c),(r+1,c-1),(r-1,c-1),(r-1,c+1),(r-1,c),(r,c-1)]
+        enemyColor = "b" if self.white_to_move else "w"
+        for square in adjSquares:
+            if self.board[square[0]][square[1]]=="--":
+                moves.append(Move((r,c),square,self))
+            elif self.board[square[0]][square[1]][0]==enemyColor:
+                moves.append(Move((r,c),square,self))
+            else:
+                continue
     def getQueenMoves(self,r,c,moves):
-        pass
+        self.getBishopMoves(r,c,moves)
+        self.getRookMoves(r,c,moves)
     def getRookMoves(self,r,c,moves):
-        pass 
-        
+        directons =[(-1,0),(0,-1),(1,0),(0,1)]
+        enemyColor = "b" if self.white_to_move else "w"
+        for d in directons:
+            for i in range(1,8):
+                endRow = r = d[0] *i
+                endCol =c = d[1] *i
+                if 0 <= endRow <8 and 0<= endCol<8:
+                    endPiece = self.board[endRow][endCol]
+                    if endPiece=="--":
+                        moves.append(Move((r,c),(endRow,endCol),self))
+                    elif endPiece[0]==enemyColor:
+                        moves.append(Move((r,c),(endRow,endCol),self))
+                        break
+                    else:
+                        break
+                else:
+                    break
     def getLegalMoves(self):
         return self.getPossibleMoves()
         
