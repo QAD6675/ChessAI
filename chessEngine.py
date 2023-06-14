@@ -44,8 +44,6 @@ class GameState():
                         self.getKnightMoves(r,c,moves)
                     elif piece=="B":
                         self.getBishopMoves(r,c,moves)
-        for move in moves:
-            print (move.getChessNotation(self))
         return moves
                         
     def getPawnMoves(self,r,c,moves):   
