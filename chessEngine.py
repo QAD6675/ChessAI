@@ -26,6 +26,9 @@ class GameState():
         self.board[move.endRow][move.endColumn] = move.movedPiece
         self.move_log.append(move)
         self.white_to_move = not self.white_to_move
+        
+        if move.isPromotion:
+            self.board[move.endRow][move.endColumn] = move.movedPiece[0]+move.promotionPiece
     def undo_move(self):
         if len(self.move_log)==0:
             return
@@ -37,6 +40,9 @@ class GameState():
         self.board[move.endRow][move.endColumn] = move.capturedPiece
         self.board[move.startRow][move.startColumn] = move.movedPiece
         self.white_to_move = not self.white_to_move
+        
+        if move.isPromotion:
+            self.board[move.startRow][move.startColumn] = move.movedPiece[0]+"p"
     def getPossibleMoves(self):
         moves=[]
         for r in range(len(self.board)):
@@ -210,7 +216,6 @@ class GameState():
                             break
                 else:
                     break
-
     def getLegalMoves(self):
         moves=[]
         self.inCheck,self.pins,self.checks=self.checkforChecksAndPins()
@@ -313,6 +318,10 @@ class Move():
         self.endColumn = end[1]
         self.capturedPiece= gs.board[self.endRow][self.endColumn]
         self.movedPiece=gs.board[self.startRow][self.startColumn]
+        self.isPromotion=False
+        self.promotionPiece = "Q"
+        if (self.movedPiece == "wp"and self.endRow==0)or(self.movedPiece == "bp"and self.endRow==7):
+            self.isPromotion=True
         
     def __eq__(self, other):
         if isinstance(other,Move):
@@ -322,7 +331,6 @@ class Move():
         
         
     def getChessNotation(self,gs):
-        #TODO - enhance this by adding check,promotion and mate notation
         if self.movedPiece =="wK"or self.movedPiece == "bK":
             pieceName ="K"
         elif self.movedPiece =="wQ"or self.movedPiece == "bQ":
@@ -337,12 +345,37 @@ class Move():
             
         if self.capturedPiece != "--": #SECTION - capture logic
             if self.movedPiece =="wp"or self.movedPiece == "bp":
+                if self.isPromotion:
+                    if gs.checkMate:
+                        return self.colToFile[self.startColumn]+"x"+self.getRankFile(self.endRow, self.endColumn)+"="+self.promotionPiece+"#"
+                    if gs.inCheck:
+                        return self.colToFile[self.startColumn]+"x"+self.getRankFile(self.endRow, self.endColumn)+"="+self.promotionPiece+"+"
+                    return self.colToFile[self.startColumn]+"x"+self.getRankFile(self.endRow, self.endColumn)+"="+self.promotionPiece
+                if gs.checkMate:
+                    return self.colToFile[self.startColumn]+"x"+self.getRankFile(self.endRow, self.endColumn)+"#"
+                if gs.inCheck:
+                    return self.colToFile[self.startColumn]+"x"+self.getRankFile(self.endRow, self.endColumn)+"+"
                 return self.colToFile[self.startColumn]+"x"+self.getRankFile(self.endRow, self.endColumn)
             pieceName = pieceName+"x"
             
             
-        if self.movedPiece =="wp"or self.movedPiece == "bp": #NOTE - pawn moves are notated deferentially
+        if self.movedPiece =="wp"or self.movedPiece == "bp": #NOTE - pawn moves are notated deferently
+            if self.isPromotion:
+                if gs.checkMate:
+                    return self.getRankFile(self.endRow, self.endColumn)+"="+self.promotionPiece+"#"
+                if gs.inCheck:
+                    return self.getRankFile(self.endRow, self.endColumn)+"="+self.promotionPiece+"+"
+                return self.getRankFile(self.endRow, self.endColumn)+"="+self.promotionPiece
+            if gs.checkMate:
+                return self.getRankFile(self.endRow, self.endColumn)+"#"
+            if gs.inCheck:
+                return self.getRankFile(self.endRow, self.endColumn)+"+"
             return self.getRankFile(self.endRow, self.endColumn)
+        
+        if gs.checkMate:
+            return pieceName+self.getRankFile(self.endRow, self.endColumn)+"#"
+        if gs.inCheck:
+            return pieceName+self.getRankFile(self.endRow, self.endColumn)+"+"     
             
         return pieceName+self.getRankFile(self.endRow, self.endColumn)
 

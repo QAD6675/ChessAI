@@ -44,15 +44,18 @@ def main():
                     playerClicks.append(sqSelected)
                 if len(playerClicks)==2:
                     move = Move(playerClicks[0], playerClicks[1],gs)
-                    if move in validMoves:
-                        print(move.getChessNotation(gs))
-                        gs.make_move(move)
-                        moveMade = True
-                        sqSelected= ()
-                        playerClicks= []
-                    else:
+                    for i in range(len(validMoves)):
+                        if move == validMoves[i]:
+                            #if validMoves[i].isPromotion: #TODO - add underpromotion
+                            gs.make_move(validMoves[i])
+                            gs.inCheck,gs.pins,gs.checks=gs.checkforChecksAndPins()
+                            print(validMoves[i].getChessNotation(gs))
+                            moveMade = True
+                            sqSelected= ()
+                            playerClicks= []
+                    if not moveMade:
                         playerClicks= [sqSelected]
-                    
+
         if moveMade:
             validMoves=gs.getLegalMoves()
             moveMade=False
