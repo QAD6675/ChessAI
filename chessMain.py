@@ -46,7 +46,6 @@ def main():
                     move = Move(playerClicks[0], playerClicks[1],gs)
                     for i in range(len(validMoves)):
                         if move == validMoves[i]:
-                            #if validMoves[i].isPromotion: #TODO - add underpromotion
                             gs.make_move(validMoves[i])
                             gs.inCheck,gs.pins,gs.checks=gs.checkforChecksAndPins()
                             print(validMoves[i].getChessNotation(gs))
