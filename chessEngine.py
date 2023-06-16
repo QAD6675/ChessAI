@@ -148,15 +148,14 @@ class GameState():
                 if self.board[r-1][c-1][0]== "b":
                     if not piecePinned or pinDirection==(-1,-1):
                         moves.append(Move((r,c),(r-1,c-1),self))
-                else:
+                elif self.enPassantPossible == (r-1,c-1):
                     if not piecePinned or pinDirection==(-1,-1):
                         moves.append(Move((r,c),(r-1,c-1),self,isEnpassant=True))
             if c+1<=7:
                 if self.board[r-1][c+1][0]== "b":
                     if not piecePinned or pinDirection==(-1,1):
                         moves.append(Move((r,c),(r-1,c+1),self))
-                        
-                else:
+                elif self.enPassantPossible == (r-1,c+1):
                     if not piecePinned or pinDirection==(-1,1):
                         moves.append(Move((r,c),(r-1,c+1),self,isEnpassant=True))                   
         else:
@@ -169,14 +168,14 @@ class GameState():
                 if self.board[r+1][c-1][0]== "w":
                     if not piecePinned or pinDirection==(1,-1):
                         moves.append(Move((r,c),(r+1,c-1),self))
-                else:
+                elif self.enPassantPossible == (r-1,c-1):
                     if not piecePinned or pinDirection==(1,-1):
                         moves.append(Move((r,c),(r+1,c-1),self,isEnpassant=True))
             if c+1<=7:
                 if self.board[r+1][c+1][0]== "w":
                     if not piecePinned or pinDirection==(1,1):
                         moves.append(Move((r,c),(r+1,c+1),self))
-                else:
+                elif self.enPassantPossible == (r+1,c+1):
                     if not piecePinned or pinDirection==(1,1):
                         moves.append(Move((r,c),(r+1,c+1),self,isEnpassant=True))               
     def getKnightMoves(self,r,c,moves):
