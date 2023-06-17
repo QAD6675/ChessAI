@@ -16,15 +16,15 @@ def loadImages():
         IMAGES[piece]=p.transform.scale(p.image.load("pics/"+piece+".png"),(SQUARE_SIZE,SQUARE_SIZE))
         #NOTE - you can access imgs via the IMAGES dictionary
 def chooseBot():
-    bot=input("choose opponent\n magnus,noob,grandpa :")
-    if bot =="magnus":
-        return magnusCarlsen
-    elif bot =="grandpa":
-        return grandpa
-    elif bot =="noob":
-        return noob
-    else:
-        chooseBot()
+    bot=()
+    while bot not in ["magnus","grandpa","noob"]:
+        bot=promptUser("choose opponent\n magnus,noob,grandpa :")
+        if bot =="magnus":
+            return magnusCarlsen
+        elif bot =="grandpa":
+            return grandpa
+        elif bot =="noob":
+            return noob
 def main():
     p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
@@ -84,15 +84,12 @@ def main():
                             playerClicks= [sqSelected]
         #SECTION -  magnus AI                  
         if not gameOver and not userTurn and len(validMoves)>0:
-            AIMove = bot.findRandomMove(validMoves)
+            AIMove = bot.findBestMove(gs,validMoves)
+            if AIMove is None:
+                noob.findBestMove(gs,validMoves)
             gs.make_move(AIMove)
             moveMade = True
             animate=True
-        if len(validMoves)==0:
-            if gs.inCheck:
-                gs.checkMate=True
-            else:
-                gs.staleMate=True
         if moveMade:
             validMoves=gs.getLegalMoves()
             if animate:
@@ -118,6 +115,9 @@ def drawGameState(screen,gs,validMoves,sqSelected):
     drawBoard(screen) #NOTE - this draws the squares
     highlightSquares(screen,gs,validMoves,sqSelected)   #NOTE - this draws the squares
     drawPieces(screen,gs.board)#NOTE - this draws the pieces
+    
+def promptUser(question):
+    return input(question)
     
 def drawBoard(screen):
     global colors
