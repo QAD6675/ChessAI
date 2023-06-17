@@ -32,9 +32,10 @@ def main():
                 running = False
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_z:
-                    gs.undo_move()
-                    moveMade=True
-                    animate = False
+                    if  not gameOver:
+                        gs.undo_move()
+                        moveMade=True
+                        animate = False
                 elif e.key == p.K_r:
                     gs= GameState()
                     validMoves= gs.getLegalMoves()
@@ -66,13 +67,27 @@ def main():
                                 playerClicks= []
                         if not moveMade:
                             playerClicks= [sqSelected]
-
+                            
+        if len(validMoves)==0:
+            if gs.inCheck:
+                gs.checkMate=True
+            else:
+                gs.staleMate=True
         if moveMade:
             validMoves=gs.getLegalMoves()
             if animate:
                 animateMoves(gs.move_log[-1],screen,gs.board,clock)
             moveMade=False
         drawGameState(screen,gs,validMoves,sqSelected)
+        if gs.checkMate:
+            gameOver=True
+            if gs.white_to_move:
+                drawText(screen,"black wins by checkmate")
+            else:
+                drawText(screen,"white wins by checkmate")
+        elif gs.staleMate:
+            gameOver=True
+            drawText(screen,"draw by stalemate")
         clock.tick(MAX_FPS)
         p.display.flip()
         
@@ -85,11 +100,23 @@ def drawGameState(screen,gs,validMoves,sqSelected):
     
 def drawBoard(screen):
     global colors
-    colors =[p.Color("white"),p.Color(60,60,60)]
+    colors =[p.Color("white"),p.Color("gray")]
     for r in range(DIMENTIONS):
         for c in range(DIMENTIONS):
             color = colors[((r+c)%2)]
             p.draw.rect(screen,color,p.Rect(c*SQUARE_SIZE,r*SQUARE_SIZE,SQUARE_SIZE,SQUARE_SIZE))
+            
+def drawText(screen,text):
+    overlay= p.Surface((WIDTH,HEIGHT))
+    overlay.fill(p.Color("black"))
+    overlay.set_alpha(200)
+    screen.blit(overlay,(0,0))
+    font = p.font.SysFont("Helvetica",32,True,False)
+    textObj = font.render(text,0,p.Color("black"))
+    textLocation = p.Rect(0,0,WIDTH,HEIGHT).move(WIDTH/2 - textObj.get_width()/2,HEIGHT/2- textObj.get_height()/2)
+    screen.blit(textObj,textLocation)
+    textObj = font.render(text,0,p.Color("gray"))
+    screen.blit(textObj,textLocation.move(3,3))   
             
 def drawPieces(screen,board):
     for r in range(DIMENTIONS):
