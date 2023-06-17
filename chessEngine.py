@@ -22,7 +22,7 @@ class GameState():
         self.CastlingRightsLog = [CastlingRights(self.currentCastlingRights.wks,self.currentCastlingRights.bks,self.currentCastlingRights.wqs,self.currentCastlingRights.bqs)]
     def promptUser(self,question):
         return input(question)
-    def make_move(self,move):
+    def make_move(self,move,isAI=False):
         if move.movedPiece== "wK":
             self.whiteKingLocation= (move.endRow, move.endColumn)
         if move.movedPiece== "bK":
@@ -33,9 +33,10 @@ class GameState():
         self.white_to_move = not self.white_to_move
         
         if move.isPromotion:
-            move.promotionPiece=self.promptUser("choose promotion piece: ").upper()
-            if move.promotionPiece not in ["R","N","Q","B"]:
-                move.promotionPiece=self.promptUser("invalid piece choose an other promotion piece: ").upper()   #SECTION - promotion 
+            if not isAI:
+                move.promotionPiece=self.promptUser("choose promotion piece: ").upper()
+                if move.promotionPiece not in ["R","N","Q","B"]:
+                    move.promotionPiece=self.promptUser("invalid piece choose an other promotion piece: ").upper()   #SECTION - promotion 
             self.board[move.endRow][move.endColumn] = move.movedPiece[0]+move.promotionPiece
             
         if move.isCastling:
@@ -73,11 +74,6 @@ class GameState():
                 elif move.startColumn==7:
                     self.currentCastlingRights.bks = False
         self.CastlingRightsLog.append(CastlingRights(self.currentCastlingRights.wks,self.currentCastlingRights.bks,self.currentCastlingRights.wqs,self.currentCastlingRights.bqs))
-        if len(self.getLegalMoves())==0:
-            if self.inCheck:
-                self.checkMate=True
-            else:
-                self.staleMate=True
     def undo_move(self):
         if len(self.move_log)==0:
             return
@@ -110,6 +106,7 @@ class GameState():
             
         self.CastlingRightsLog.pop()
         self.currentCastlingRights=self.CastlingRightsLog[-1]
+        self.checkMate,self.staleMate=False,False
     def getPossibleMoves(self):
         moves=[]
         for r in range(len(self.board)):

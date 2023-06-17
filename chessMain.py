@@ -1,8 +1,6 @@
 import pygame as p
 from chessEngine import GameState,Move
-import magnusCarlsen
-import grandpa
-import noob
+import magnusCarlsen as bot
 
 WIDTH = HEIGHT = 512
 DIMENTIONS = 8
@@ -15,16 +13,6 @@ def loadImages():
     for piece in pieces:
         IMAGES[piece]=p.transform.scale(p.image.load("pics/"+piece+".png"),(SQUARE_SIZE,SQUARE_SIZE))
         #NOTE - you can access imgs via the IMAGES dictionary
-def chooseBot():
-    bot=()
-    while bot not in ["magnus","grandpa","noob"]:
-        bot=promptUser("choose opponent\n magnus,noob,grandpa :")
-        if bot =="magnus":
-            return magnusCarlsen
-        elif bot =="grandpa":
-            return grandpa
-        elif bot =="noob":
-            return noob
 def main():
     p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
@@ -35,7 +23,6 @@ def main():
     playerOne = True #NOTE - these specify if you play white (witchis true) or the AI does  
     playerTwo = False
     animate=False
-    bot=chooseBot()
     loadImages()
     running = True
     sqSelected =()
@@ -52,6 +39,7 @@ def main():
                         gs.undo_move()
                         moveMade=True
                         animate = False
+                        gameOver = False
                 elif e.key == p.K_r:
                     gs= GameState()
                     validMoves= gs.getLegalMoves()
@@ -59,6 +47,7 @@ def main():
                     playerClicks=[]
                     moveMade=False
                     animate=False
+                    gameOver=False
             elif e.type == p.MOUSEBUTTONDOWN: #SECTION - onclick
                 if not gameOver and userTurn:
                     location = p.mouse.get_pos()
@@ -85,8 +74,6 @@ def main():
         #SECTION -  magnus AI                  
         if not gameOver and not userTurn and len(validMoves)>0:
             AIMove = bot.findBestMove(gs,validMoves)
-            if AIMove is None:
-                noob.findBestMove(gs,validMoves)
             gs.make_move(AIMove)
             moveMade = True
             animate=True
