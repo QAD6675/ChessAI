@@ -276,7 +276,7 @@ class GameState():
             if not self.squareUnderAttack(r,c+1) and not self.squareUnderAttack(r,c+2):
                 moves.append(Move((r,c),(r,c+2),self,isCastling=True))
     def getQSCastlingMoves(self,r,c,moves,allyColor):
-        if self.board[r][c-1] == "--" and self.board[r][c-2]=="--":
+        if self.board[r][c-1] == "--" and self.board[r][c-2]=="--" and self.board[r][c-3] == "--":
             if not self.squareUnderAttack(r,c-1) and not self.squareUnderAttack(r,c-2):
                 moves.append(Move((r,c),(r,c-2),self,isCastling=True))
     def squareUnderAttack(self,r,c):
