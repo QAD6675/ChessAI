@@ -1,5 +1,8 @@
 import pygame as p
 from chessEngine import GameState,Move
+import magnusCarlsen
+import grandpa
+import noob
 
 WIDTH = HEIGHT = 512
 DIMENTIONS = 8
@@ -12,7 +15,16 @@ def loadImages():
     for piece in pieces:
         IMAGES[piece]=p.transform.scale(p.image.load("pics/"+piece+".png"),(SQUARE_SIZE,SQUARE_SIZE))
         #NOTE - you can access imgs via the IMAGES dictionary
-
+def chooseBot():
+    bot=input("choose opponent\n magnus,noob,grandpa :")
+    if bot =="magnus":
+        return magnusCarlsen
+    elif bot =="grandpa":
+        return grandpa
+    elif bot =="noob":
+        return noob
+    else:
+        chooseBot()
 def main():
     p.init()
     screen = p.display.set_mode((WIDTH,HEIGHT))
@@ -20,13 +32,17 @@ def main():
     gs = GameState()
     validMoves = gs.getLegalMoves()
     gameOver = False
+    playerOne = True #NOTE - these specify if you play white (witchis true) or the AI does  
+    playerTwo = False
     animate=False
+    bot=chooseBot()
     loadImages()
     running = True
     sqSelected =()
     playerClicks = []
     moveMade = False
     while running:
+        userTurn = (gs.white_to_move and playerOne) or (not gs.white_to_move and playerTwo)
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
@@ -44,7 +60,7 @@ def main():
                     moveMade=False
                     animate=False
             elif e.type == p.MOUSEBUTTONDOWN: #SECTION - onclick
-                if not gameOver:
+                if not gameOver and userTurn:
                     location = p.mouse.get_pos()
                     col=location[0] // SQUARE_SIZE
                     row=location[1] // SQUARE_SIZE
@@ -60,14 +76,18 @@ def main():
                             if move == validMoves[i]:
                                 gs.make_move(validMoves[i])
                                 gs.inCheck,gs.pins,gs.checks=gs.checkforChecksAndPins()
-                                print(validMoves[i].getChessNotation(gs))
                                 moveMade = True
                                 animate=True
                                 sqSelected= ()
                                 playerClicks= []
                         if not moveMade:
                             playerClicks= [sqSelected]
-                            
+        #SECTION -  magnus AI                  
+        if not gameOver and not userTurn and len(validMoves)>0:
+            AIMove = bot.findRandomMove(validMoves)
+            gs.make_move(AIMove)
+            moveMade = True
+            animate=True
         if len(validMoves)==0:
             if gs.inCheck:
                 gs.checkMate=True
@@ -77,6 +97,7 @@ def main():
             validMoves=gs.getLegalMoves()
             if animate:
                 animateMoves(gs.move_log[-1],screen,gs.board,clock)
+                print(gs.move_log[-1].getChessNotation(gs))
             moveMade=False
         drawGameState(screen,gs,validMoves,sqSelected)
         if gs.checkMate:
