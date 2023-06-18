@@ -79,6 +79,8 @@ def main():
         #SECTION -  magnus AI                  
         if not gameOver and not userTurn and len(validMoves)>0:
             AIMove = bot.findBestMove(gs,validMoves)
+            if AIMove is None :
+                bot.findRandomMove(gs,validMoves)
             gs.make_move(AIMove)
             moveMade = True
             animate=True

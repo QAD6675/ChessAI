@@ -3,16 +3,16 @@ import time
 
 materialValue = {"K":0,"Q":10,"R":5,"B":3,"N":3,"p":1}
 CHECKMATE= 1000
-DEPTH = 2
+DEPTH = 4
 
 def findBestMove(gs,validMoves):
     global nextMove
     nextMove=None
     random.shuffle(validMoves)
-    findNiggaMaxMove(gs,validMoves,DEPTH,1 if gs.white_to_move else -1)
+    findNiggaMaxWithPruningMove(gs,validMoves,DEPTH,-CHECKMATE,CHECKMATE,1 if gs.white_to_move else -1)
     return nextMove
 
-def findNiggaMaxMove(gs,validMoves,depth,turnMultiplier):
+def findNiggaMaxWithPruningMove(gs,validMoves,depth,alpha,beta,turnMultiplier):
     global nextMove
     if depth == 0:
         return turnMultiplier * evaluate(gs)
@@ -20,12 +20,16 @@ def findNiggaMaxMove(gs,validMoves,depth,turnMultiplier):
     for move in validMoves:
         gs.make_move(move,True)
         nextMoves=gs.getLegalMoves()
-        eval = -findNiggaMaxMove(gs,nextMoves,depth-1,-turnMultiplier)
+        eval = -findNiggaMaxWithPruningMove(gs,nextMoves,depth-1,-beta,-alpha,-turnMultiplier)
         if eval> maxEval:
             maxEval = eval
             if depth == DEPTH:
                 nextMove = move
         gs.undo_move()
+        if maxEval > alpha:
+            alpha = maxEval
+        if alpha >= beta:
+            break
     return maxEval
     
 
