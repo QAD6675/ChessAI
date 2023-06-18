@@ -83,6 +83,8 @@ def main():
             AIMove = bot.findBestMove(gs,validMoves)
             if AIMove is None :
                 bot.findRandomMove(validMoves)
+                if AIMove is None :
+                    validMoves[0]
             gs.make_move(AIMove)
             moveMade = True
             animate=True
@@ -126,6 +128,8 @@ def drawNotation(screen,gs,font):
         if i +1<len(gs.notationLog):
             moveStr += gs.notationLog[i+1] 
         notations.append(moveStr)
+        if len (notations) == 22:
+            notations.pop(0)
     for i in range(len(notations)):
         textObj = font.render(notations[i],True,p.Color("white"))
         textLocation = move_log_panel.move(padding,textY)
