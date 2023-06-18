@@ -3,7 +3,7 @@ import time
 
 materialValue = {"K":0,"Q":10,"R":5,"B":3,"N":3,"p":1}
 CHECKMATE= 1000
-DEPTH = 4
+DEPTH = 3
 
 def findBestMove(gs,validMoves):
     global nextMove
@@ -35,7 +35,7 @@ def findNiggaMaxWithPruningMove(gs,validMoves,depth,alpha,beta,turnMultiplier):
 
 def evaluate(gs):
     if gs.checkMate:
-        if gs.white:
+        if gs.white_to_move:
             return -CHECKMATE
         else:
             return CHECKMATE
