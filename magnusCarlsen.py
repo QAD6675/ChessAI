@@ -1,44 +1,52 @@
 import random
 import time
-from chessEngine import Move
 
 materialValue = {"K":0,"Q":10,"R":5,"B":3,"N":3,"p":1}
 CHECKMATE= 1000
-
+DEPTH = 2
 
 def findBestMove(gs,validMoves):
-    turnMultiplier = 1 if gs.white_to_move else -1
-    oppMinMaxEval=CHECKMATE
-    bestMove = None
-    random.shuffle(validMoves)
-    for playerMove in validMoves:
-        gs.make_move(playerMove,isAI=True)
-        oppMoves = gs.getLegalMoves()
-        if gs.checkMate:
-            oppMaxEval=-CHECKMATE
-        elif gs.staleMate:
-            oppMaxEval=0
-        else:
-            oppMaxEval = -CHECKMATE
-            for oppMove in oppMoves:
-                gs.make_move(oppMove,isAI=True)
-                if gs.checkMate:
-                    eval= CHECKMATE
-                elif gs.staleMate:
-                    eval= 0
-                else:
-                    eval=-turnMultiplier * evaluate(gs)
-                if eval > oppMaxEval:
-                    oppMaxEval=eval
-                gs.undo_move()
-            if oppMaxEval < oppMinMaxEval:
-                oppMinMaxEval=oppMaxEval
-                bestMove=playerMove
-            gs.undo_move()
-    
-    return bestMove
+    global nextMove
+    nextMove=None
+    findMinMaxMove(gs,validMoves,DEPTH,gs.white_to_move)
+    return nextMove
 
+def findMinMaxMove(gs,validMoves,depth,white_to_move):
+    global nextMove
+    if depth==0:
+        return evaluate(gs)
+    if white_to_move:
+        maxEval = -CHECKMATE
+        for move in validMoves:
+            gs.make_move(move)
+            nextMoves=gs.getLegalMoves()
+            eval = findMinMaxMove(gs,nextMoves,depth-1,False)
+            if eval> maxEval:
+                maxEval = eval
+                if depth == DEPTH:
+                    nextMove =move
+            gs.undo_move()
+        return maxEval
+    else:
+        minEval = CHECKMATE
+        for move in validMoves:
+            gs.make_move(move)
+            nextMoves=gs.getLegalMoves()
+            eval = findMinMaxMove(gs,nextMoves,depth-1,True)
+            if eval< minEval:
+                minEval = eval
+                if depth == DEPTH:
+                    nextMove =move
+            gs.undo_move()
+        return minEval
 def evaluate(gs):
+    if gs.checkMate:
+        if gs.white:
+            return -CHECKMATE
+        else:
+            return CHECKMATE
+    elif gs.staleMate:
+        return 0
     eval = 0
     for rank in gs.board:
         for square in rank:
@@ -47,6 +55,7 @@ def evaluate(gs):
             elif square[0]=="b":
                 eval -= materialValue[square[1]]
     return eval
+
 
 def findRandomMove(validMoves):
     time.sleep(0.5)
