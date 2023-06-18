@@ -20,7 +20,7 @@ def main():
     gs = GameState()
     validMoves = gs.getLegalMoves()
     gameOver = False
-    playerOne = True #NOTE - these specify if you play white (witchis true) or the AI does  
+    playerOne = True #NOTE - these specify if you play white or the AI does (full name is player one is human )
     playerTwo = False
     animate=False
     loadImages()
@@ -40,6 +40,11 @@ def main():
                         moveMade=True
                         animate = False
                         gameOver = False
+                        if not playerOne ==playerTwo:
+                            gs.undo_move()
+                            moveMade=True
+                            animate = False
+                            gameOver = False
                 elif e.key == p.K_r:
                     gs= GameState()
                     validMoves= gs.getLegalMoves()

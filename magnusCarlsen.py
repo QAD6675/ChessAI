@@ -8,37 +8,27 @@ DEPTH = 2
 def findBestMove(gs,validMoves):
     global nextMove
     nextMove=None
-    findMinMaxMove(gs,validMoves,DEPTH,gs.white_to_move)
+    random.shuffle(validMoves)
+    findNiggaMaxMove(gs,validMoves,DEPTH,1 if gs.white_to_move else -1)
     return nextMove
 
-def findMinMaxMove(gs,validMoves,depth,white_to_move):
+def findNiggaMaxMove(gs,validMoves,depth,turnMultiplier):
     global nextMove
-    if depth==0:
-        return evaluate(gs)
-    if white_to_move:
-        maxEval = -CHECKMATE
-        for move in validMoves:
-            gs.make_move(move)
-            nextMoves=gs.getLegalMoves()
-            eval = findMinMaxMove(gs,nextMoves,depth-1,False)
-            if eval> maxEval:
-                maxEval = eval
-                if depth == DEPTH:
-                    nextMove =move
-            gs.undo_move()
-        return maxEval
-    else:
-        minEval = CHECKMATE
-        for move in validMoves:
-            gs.make_move(move)
-            nextMoves=gs.getLegalMoves()
-            eval = findMinMaxMove(gs,nextMoves,depth-1,True)
-            if eval< minEval:
-                minEval = eval
-                if depth == DEPTH:
-                    nextMove =move
-            gs.undo_move()
-        return minEval
+    if depth == 0:
+        return turnMultiplier * evaluate(gs)
+    maxEval = -CHECKMATE
+    for move in validMoves:
+        gs.make_move(move,True)
+        nextMoves=gs.getLegalMoves()
+        eval = -findNiggaMaxMove(gs,nextMoves,depth-1,-turnMultiplier)
+        if eval> maxEval:
+            maxEval = eval
+            if depth == DEPTH:
+                nextMove = move
+        gs.undo_move()
+    return maxEval
+    
+
 def evaluate(gs):
     if gs.checkMate:
         if gs.white:
