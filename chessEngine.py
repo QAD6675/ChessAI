@@ -18,9 +18,13 @@ class GameState():
         self.checkMate=False
         self.staleMate=False
         self.enPassantPossible =()
+        self.enPassantPossibleLog=[]
+        self.notationLog=[]
         self.currentCastlingRights = CastlingRights(True,True,True,True)
         self.CastlingRightsLog = [CastlingRights(self.currentCastlingRights.wks,self.currentCastlingRights.bks,self.currentCastlingRights.wqs,self.currentCastlingRights.bqs)]
-    def make_move(self,move):
+    def promptUser(self,question):
+        return input(question)
+    def make_move(self,move,isAI=False):
         if move.movedPiece== "wK":
             self.whiteKingLocation= (move.endRow, move.endColumn)
         if move.movedPiece== "bK":
@@ -31,9 +35,10 @@ class GameState():
         self.white_to_move = not self.white_to_move
         
         if move.isPromotion:
-            move.promotionPiece=input("choose promotion piece: ").upper()
-            if move.promotionPiece not in ["R","N","Q","B"]:
-                move.promotionPiece=input("invalid piece choose an other promotion piece: ").upper()   #SECTION - promotion 
+            if not isAI:
+                move.promotionPiece=self.promptUser("choose promotion piece: ").upper()
+                if move.promotionPiece not in ["R","N","Q","B"]:
+                    move.promotionPiece=self.promptUser("invalid piece choose an other promotion piece: ").upper()   #SECTION - promotion 
             self.board[move.endRow][move.endColumn] = move.movedPiece[0]+move.promotionPiece
             
         if move.isCastling:
@@ -49,8 +54,10 @@ class GameState():
             
         if move.movedPiece[1] == "p" and abs(move.startRow - move.endRow)==2:
             self.enPassantPossible=((move.endRow + move.startRow)//2,move.endColumn)    #SECTION - en passant 
+            self.enPassantPossibleLog.append(self.enPassantPossible)
         else:
             self.enPassantPossible=()
+            self.enPassantPossibleLog.append(self.enPassantPossible)
             
         if move.movedPiece == "wK":
             self.currentCastlingRights.wks = False
@@ -70,20 +77,16 @@ class GameState():
                     self.currentCastlingRights.bqs = False
                 elif move.startColumn==7:
                     self.currentCastlingRights.bks = False
+                    
+        self.notationLog.append(move.getChessNotation(self))
         self.CastlingRightsLog.append(CastlingRights(self.currentCastlingRights.wks,self.currentCastlingRights.bks,self.currentCastlingRights.wqs,self.currentCastlingRights.bqs))
     def undo_move(self):
         if len(self.move_log)==0:
             return
         if self.move_log[-1].movedPiece== "wK":
             self.whiteKingLocation= (self.move_log[-1].startRow, self.move_log[-1].startColumn)
-            if not self.move_log[-1].isCastling:
-                print("kings must be fearless, there is no coming back")
-                return
         if self.move_log[-1].movedPiece== "bK":
             self.blackKingLocation= (self.move_log[-1].startRow, self.move_log[-1].startColumn)
-            if not self.move_log[-1].isCastling:
-                print("kings must be fearless, there is no coming back")
-                return     
         move=self.move_log.pop()
         self.board[move.endRow][move.endColumn] = move.capturedPiece
         self.board[move.startRow][move.startColumn] = move.movedPiece
@@ -104,11 +107,16 @@ class GameState():
             self.board[move.endRow][move.endColumn] ="--"
             self.board[move.startRow][move.endColumn] = "wp" if not self.white_to_move else "bp"
             self.enPassantPossible=(move.endRow,move.endColumn)
+            self.enPassantPossibleLog.append(self.enPassantPossible)
         if move.movedPiece[1]=="p"  and abs(move.startRow-move.endRow) == 2:
             self.enPassantPossible=()
             
         self.CastlingRightsLog.pop()
+        self.enPassantPossibleLog.pop()
+        self.enPassantPossible= self.enPassantPossibleLog[-1]
         self.currentCastlingRights=self.CastlingRightsLog[-1]
+        self.notationLog.pop()
+        self.checkMate,self.staleMate=False,False
     def getPossibleMoves(self):
         moves=[]
         for r in range(len(self.board)):
@@ -272,11 +280,11 @@ class GameState():
         if (allyColor=="w" and self.currentCastlingRights.wqs) or (allyColor=="b" and self.currentCastlingRights.bqs):
             self.getQSCastlingMoves(r,c,moves,allyColor)           
     def getKSCastlingMoves(self,r,c,moves,allyColor):
-        if self.board[r][c+1] == "--" and self.board[r][c+2]=="--":
+        if self.board[r][c+1] == "--" and self.board[r][c+2]=="--" and self.board[r][c+3][1] == "R":
             if not self.squareUnderAttack(r,c+1) and not self.squareUnderAttack(r,c+2):
                 moves.append(Move((r,c),(r,c+2),self,isCastling=True))
     def getQSCastlingMoves(self,r,c,moves,allyColor):
-        if self.board[r][c-1] == "--" and self.board[r][c-2]=="--":
+        if self.board[r][c-1] == "--" and self.board[r][c-2]=="--" and self.board[r][c-3] == "--" and self.board[r][c-4][1] == "R":
             if not self.squareUnderAttack(r,c-1) and not self.squareUnderAttack(r,c-2):
                 moves.append(Move((r,c),(r,c-2),self,isCastling=True))
     def squareUnderAttack(self,r,c):
@@ -438,6 +446,7 @@ class GameState():
                     inCheck = True
                     checks.append((endRow, endCol,m[0],m[1]))
         return inCheck,pins,checks
+    
 class Move():
     rankToRow={"1":7,"2":6,"3":5,"4":4,"5":3,"6":2,"7":1,"8":0}
     rowToRank={v:k for k,v in rankToRow.items()}
@@ -465,6 +474,11 @@ class Move():
         
         
     def getChessNotation(self,gs):
+        if len(gs.getLegalMoves())==0:
+            if gs.inCheck:
+                gs.checkMate=True
+            else:
+                gs.staleMate=True
         if self.movedPiece =="wK"or self.movedPiece == "bK":
             pieceName ="K"
             if self.isCastling:

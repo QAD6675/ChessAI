@@ -1,8 +1,10 @@
 import pygame as p
 from chessEngine import GameState,Move
+import magnusCarlsen as bot
 
 WIDTH = HEIGHT = 512
 DIMENTIONS = 8
+MLPW=250
 SQUARE_SIZE= HEIGHT // DIMENTIONS
 MAX_FPS = 15
 IMAGES = {}
@@ -12,21 +14,24 @@ def loadImages():
     for piece in pieces:
         IMAGES[piece]=p.transform.scale(p.image.load("pics/"+piece+".png"),(SQUARE_SIZE,SQUARE_SIZE))
         #NOTE - you can access imgs via the IMAGES dictionary
-
 def main():
     p.init()
-    screen = p.display.set_mode((WIDTH,HEIGHT))
+    screen = p.display.set_mode((WIDTH+MLPW,HEIGHT))
     clock = p.time.Clock()
     gs = GameState()
     validMoves = gs.getLegalMoves()
     gameOver = False
+    playerOne = True #NOTE - these specify if you play white or the AI does (full name is player one is human )
+    playerTwo = False
     animate=False
+    move_log_font = p.font.SysFont("Helvetica",18,False,False)
     loadImages()
     running = True
     sqSelected =()
     playerClicks = []
     moveMade = False
     while running:
+        userTurn = (gs.white_to_move and playerOne) or (not gs.white_to_move and playerTwo)
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
@@ -36,6 +41,12 @@ def main():
                         gs.undo_move()
                         moveMade=True
                         animate = False
+                        gameOver = False
+                        if not playerOne ==playerTwo:
+                            gs.undo_move()
+                            moveMade=True
+                            animate = False
+                            gameOver = False
                 elif e.key == p.K_r:
                     gs= GameState()
                     validMoves= gs.getLegalMoves()
@@ -43,12 +54,13 @@ def main():
                     playerClicks=[]
                     moveMade=False
                     animate=False
+                    gameOver=False
             elif e.type == p.MOUSEBUTTONDOWN: #SECTION - onclick
-                if not gameOver:
+                if not gameOver and userTurn:
                     location = p.mouse.get_pos()
                     col=location[0] // SQUARE_SIZE
                     row=location[1] // SQUARE_SIZE
-                    if sqSelected == (row, col):
+                    if sqSelected == (row, col) or col >=8:
                         sqSelected = ()
                         playerClicks = []
                     else:
@@ -60,25 +72,28 @@ def main():
                             if move == validMoves[i]:
                                 gs.make_move(validMoves[i])
                                 gs.inCheck,gs.pins,gs.checks=gs.checkforChecksAndPins()
-                                print(validMoves[i].getChessNotation(gs))
                                 moveMade = True
                                 animate=True
                                 sqSelected= ()
                                 playerClicks= []
                         if not moveMade:
                             playerClicks= [sqSelected]
-                            
-        if len(validMoves)==0:
-            if gs.inCheck:
-                gs.checkMate=True
-            else:
-                gs.staleMate=True
+        #SECTION -  magnus AI                  
+        if not gameOver and not userTurn and len(validMoves)>0:
+            AIMove = bot.findBestMove(gs,validMoves)
+            if AIMove is None :
+                bot.findRandomMove(validMoves)
+                if AIMove is None :
+                    validMoves[0]
+            gs.make_move(AIMove)
+            moveMade = True
+            animate=True
         if moveMade:
             validMoves=gs.getLegalMoves()
             if animate:
                 animateMoves(gs.move_log[-1],screen,gs.board,clock)
             moveMade=False
-        drawGameState(screen,gs,validMoves,sqSelected)
+        drawGameState(screen,gs,validMoves,sqSelected,move_log_font)
         if gs.checkMate:
             gameOver=True
             if gs.white_to_move:
@@ -93,11 +108,35 @@ def main():
         
         
 #SECTION - graphics
-def drawGameState(screen,gs,validMoves,sqSelected): 
-    drawBoard(screen) #NOTE - this draws the squares
-    highlightSquares(screen,gs,validMoves,sqSelected)   #NOTE - this draws the squares
-    drawPieces(screen,gs.board)#NOTE - this draws the pieces
+def drawGameState(screen,gs,validMoves,sqSelected,move_log_font): 
+    drawBoard(screen) 
+    highlightSquares(screen,gs,validMoves,sqSelected)   
+    drawPieces(screen,gs.board)
+    drawNotation(screen,gs,move_log_font)
     
+def promptUser(question):
+    return input(question)
+    
+def drawNotation(screen,gs,font):
+    move_log_panel = p.Rect(WIDTH,0,MLPW,HEIGHT)
+    p.draw.rect(screen,p.Color(20,10,5),move_log_panel)
+    notations=[]
+    padding=5
+    textY = padding
+    for i in range(0,len(gs.notationLog),2):
+        moveStr = str(i//2 + 1) +"."+ gs.notationLog[i] +" "
+        if i +1<len(gs.notationLog):
+            moveStr += gs.notationLog[i+1] 
+        notations.append(moveStr)
+        if len (notations) == 22:
+            notations.pop(0)
+    for i in range(len(notations)):
+        textObj = font.render(notations[i],True,p.Color("white"))
+        textLocation = move_log_panel.move(padding,textY)
+        screen.blit(textObj,textLocation)
+        textY += textObj.get_height() +2
+        
+
 def drawBoard(screen):
     global colors
     colors =[p.Color("white"),p.Color("gray")]
